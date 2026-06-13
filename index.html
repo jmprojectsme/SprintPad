@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SprintPad</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0B1120" />
+</head>
+<body>
+
+  <!-- ================================ -->
+  <!-- SPLASH SCREEN                    -->
+  <!-- ================================ -->
+  <div id="splash">
+    <div class="splash-logo">
+      <div class="splash-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <path d="M22 4L8 22H20L18 36L32 18H20L22 4Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="splash-wordmark"><span>Sprint</span><span class="accent">Pad</span></div>
+      <div class="splash-tagline">Plan. Track. Finish.</div>
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- MAIN APP                         -->
+  <!-- ================================ -->
+  <div id="app" class="hidden">
+
+    <!-- TOP BAR (dynamic) -->
+    <header id="topbar">
+      <div id="topbar-left">
+        <div class="topbar-greeting hidden" id="topbar-greeting">
+          <div class="greeting-sub">Good morning 👋</div>
+          <div class="greeting-name" id="greeting-name">Jaymar</div>
+        </div>
+        <div class="topbar-title hidden" id="topbar-title">Projects</div>
+      </div>
+      <div id="topbar-right">
+        <button class="icon-btn" id="notif-btn" aria-label="Notifications">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- SCREENS -->
+    <main id="screens">
+
+      <!-- HOME SCREEN -->
+      <section id="screen-home" class="screen active">
+        <div class="scroll-area">
+
+          <!-- Stats Row -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon blue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              </div>
+              <div class="stat-value" id="stat-projects">0</div>
+              <div class="stat-label">Projects</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div class="stat-value" id="stat-tasks">0</div>
+              <div class="stat-label">Tasks</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="stat-value" id="stat-done">0</div>
+              <div class="stat-label">Done</div>
+            </div>
+          </div>
+
+          <!-- Today's Tasks -->
+          <div class="section-header">
+            <div class="section-title">Today's Tasks</div>
+            <button class="view-all-btn" onclick="switchTab('tasks')">View all</button>
+          </div>
+          <div id="home-tasks-list">
+            <div class="empty-state small">
+              <div class="empty-icon">📋</div>
+              <div class="empty-text">No tasks today</div>
+              <button class="empty-action" onclick="openCreate('task')">Add a task</button>
+            </div>
+          </div>
+
+          <!-- Recent Projects -->
+          <div class="section-header">
+            <div class="section-title">Recent Projects</div>
+            <button class="view-all-btn" onclick="switchTab('projects')">View all</button>
+          </div>
+          <div id="home-projects-list">
+            <div class="empty-state small">
+              <div class="empty-icon">🗂️</div>
+              <div class="empty-text">No projects yet</div>
+              <button class="empty-action" onclick="openCreate('project')">Start a project</button>
+            </div>
+          </div>
+
+          <!-- Recent Notes -->
+          <div class="section-header">
+            <div class="section-title">Recent Notes</div>
+            <button class="view-all-btn" onclick="switchTab('notes')">View all</button>
+          </div>
+          <div id="home-notes-list">
+            <div class="empty-state small">
+              <div class="empty-icon">📝</div>
+              <div class="empty-text">No notes yet</div>
+              <button class="empty-action" onclick="openCreate('note')">Write a note</button>
+            </div>
+          </div>
+
+          <div class="bottom-spacer"></div>
+        </div>
+      </section>
+
+      <!-- PROJECTS SCREEN -->
+      <section id="screen-projects" class="screen">
+        <div class="filter-tabs" id="project-filters">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="active">Active</button>
+          <button class="filter-tab" data-filter="completed">Completed</button>
+          <button class="filter-tab" data-filter="archived">Archived</button>
+        </div>
+        <div class="scroll-area" style="padding-top:0">
+          <div id="projects-list">
+            <div class="empty-state">
+              <div class="empty-icon">🗂️</div>
+              <div class="empty-text">No projects yet</div>
+              <div class="empty-sub">Create your first project to start tracking work.</div>
+              <button class="btn-primary" onclick="openCreate('project')">New Project</button>
+            </div>
+          </div>
+          <div class="bottom-spacer"></div>
+        </div>
+      </section>
+
+      <!-- TASKS SCREEN -->
+      <section id="screen-tasks" class="screen">
+        <div class="filter-tabs" id="task-filters">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="todo">To Do</button>
+          <button class="filter-tab" data-filter="inprogress">In Progress</button>
+          <button class="filter-tab" data-filter="done">Done</button>
+        </div>
+        <div class="scroll-area" style="padding-top:0">
+          <div id="tasks-list">
+            <div class="empty-state">
+              <div class="empty-icon">✅</div>
+              <div class="empty-text">No tasks yet</div>
+              <div class="empty-sub">Break your projects into tasks you can act on.</div>
+              <button class="btn-primary" onclick="openCreate('task')">New Task</button>
+            </div>
+          </div>
+          <div class="bottom-spacer"></div>
+        </div>
+      </section>
+
+      <!-- NOTES SCREEN -->
+      <section id="screen-notes" class="screen">
+        <div class="scroll-area">
+          <div id="notes-list">
+            <div class="empty-state">
+              <div class="empty-icon">📝</div>
+              <div class="empty-text">No notes yet</div>
+              <div class="empty-sub">Capture ideas, decisions, and plans here.</div>
+              <button class="btn-primary" onclick="openCreate('note')">New Note</button>
+            </div>
+          </div>
+          <div class="bottom-spacer"></div>
+        </div>
+      </section>
+
+      <!-- PROFILE SCREEN -->
+      <section id="screen-profile" class="screen">
+        <div class="scroll-area">
+          <div class="profile-header-card">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar" id="profile-avatar-display">JR</div>
+            </div>
+            <div class="profile-name" id="profile-name-display">Jaymar</div>
+            <div class="profile-stats-row">
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="ps-projects">0</div>
+                <div class="profile-stat-label">Projects</div>
+              </div>
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="ps-tasks">0</div>
+                <div class="profile-stat-label">Tasks</div>
+              </div>
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="ps-notes">0</div>
+                <div class="profile-stat-label">Notes</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-label">App</div>
+            <button class="settings-row" onclick="openNameEdit()">
+              <span class="settings-row-icon">👤</span>
+              <span class="settings-row-text">Display Name</span>
+              <span class="settings-row-chevron">›</span>
+            </button>
+            <button class="settings-row danger" onclick="confirmClearData()">
+              <span class="settings-row-icon">🗑️</span>
+              <span class="settings-row-text">Clear All Data</span>
+              <span class="settings-row-chevron">›</span>
+            </button>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-label">About</div>
+            <div class="settings-row static">
+              <span class="settings-row-icon">⚡</span>
+              <span class="settings-row-text">SprintPad</span>
+              <span class="settings-row-value">v1.0.0</span>
+            </div>
+          </div>
+
+          <div class="bottom-spacer"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav id="bottom-nav">
+      <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" data-tab="projects" onclick="switchTab('projects')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="nav-label">Projects</span>
+      </button>
+      <button class="nav-item nav-create-btn" onclick="openCreate()">
+        <div class="create-fab">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </div>
+      </button>
+      <button class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span class="nav-label">Tasks</span>
+      </button>
+      <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="nav-label">Profile</span>
+      </button>
+    </nav>
+
+  </div><!-- end #app -->
+
+  <!-- ================================ -->
+  <!-- CREATE BOTTOM SHEET              -->
+  <!-- ================================ -->
+  <div id="create-overlay" class="overlay hidden" onclick="closeCreate()"></div>
+  <div id="create-sheet" class="bottom-sheet hidden">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">What are you creating?</div>
+    <div class="create-options">
+      <button class="create-option" onclick="openForm('task')">
+        <div class="create-option-icon" style="background:#2563E8">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="create-option-body">
+          <div class="create-option-name">Task</div>
+          <div class="create-option-sub">Add a new task to a project</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="create-option" onclick="openForm('project')">
+        <div class="create-option-icon" style="background:#7C3AED">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="create-option-body">
+          <div class="create-option-name">Project</div>
+          <div class="create-option-sub">Start a new project</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="create-option" onclick="openForm('note')">
+        <div class="create-option-icon" style="background:#F59E0B">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div class="create-option-body">
+          <div class="create-option-name">Note</div>
+          <div class="create-option-sub">Write a note or idea</div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <button class="btn-ghost close-sheet-btn" onclick="closeCreate()">Cancel</button>
+  </div>
+
+  <!-- ================================ -->
+  <!-- FORM MODAL (Task / Project / Note) -->
+  <!-- ================================ -->
+  <div id="form-overlay" class="overlay hidden" onclick="closeForm()"></div>
+  <div id="form-modal" class="modal hidden">
+    <div class="modal-header">
+      <button class="modal-back" onclick="closeForm()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="modal-title" id="form-title">New Task</div>
+      <div style="width:32px"></div>
+    </div>
+    <div class="modal-body" id="form-body">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <!-- ================================ -->
+  <!-- TOAST                            -->
+  <!-- ================================ -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ================================ -->
+  <!-- NAME EDIT MODAL                  -->
+  <!-- ================================ -->
+  <div id="name-overlay" class="overlay hidden" onclick="closeNameEdit()"></div>
+  <div id="name-modal" class="modal small hidden">
+    <div class="modal-header">
+      <button class="modal-back" onclick="closeNameEdit()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="modal-title">Display Name</div>
+      <div style="width:32px"></div>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Your name</label>
+        <input type="text" id="name-input" class="field-input" placeholder="Enter your name" maxlength="30" />
+      </div>
+      <button class="btn-primary full" onclick="saveName()">Save</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+  }
+</script>
+</body>
+                </html>
+    
