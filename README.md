@@ -8,7 +8,7 @@ A mobile-first project management PWA for developers and makers who want a fast,
 
 ## 📦 Version
 
-`v1.0.0` — Initial release
+`v1.0.1` — Bug fixes, archive system, notification bell
 
 ---
 
@@ -20,7 +20,7 @@ A mobile-first project management PWA for developers and makers who want a fast,
 - **Notes** — Write and save free-form notes or ideas
 
 ### Home Screen
-- Personalized greeting with your display name
+- Personalized greeting based on time of day (Good morning / afternoon / evening)
 - Stats row showing total Projects, Tasks, and Completed count
 - Today's Tasks — surfaces tasks due today or overdue
 - Recent Projects — last 3 projects with progress bars
@@ -29,14 +29,25 @@ A mobile-first project management PWA for developers and makers who want a fast,
 ### Projects Screen
 - Filter by: All / Active / Completed / Archived
 - Project cards with icon, description, status pill, progress bar, task count, and due date
+- Projects **automatically move to Completed** when all tasks are marked done
+- Projects move back to Active if a task is restored
 
 ### Tasks Screen
-- Filter by: All / To Do / In Progress / Done
+- Filter by: All / To Do / In Progress / Done / **Archived**
 - Tap any task card to cycle its status: `To Do → In Progress → Done → To Do`
+- **Swipe left to archive** a task — removes it from active views and progress bar
+- **Swipe left on archived task to restore** — brings it back to To Do
 - Priority badges (High / Medium / Low)
+- Overdue tasks show "Xd overdue" label
 
 ### Notes Screen
 - All notes sorted by newest first
+
+### Notification Bell
+- Red dot appears when tasks are **due within 3 days or overdue**
+- Tap bell to open notification panel showing all urgent tasks
+- Red dot disappears after opening — resets the next day
+- Overdue tasks shown in red, upcoming in yellow
 
 ### Profile Screen
 - Edit your display name
@@ -59,16 +70,21 @@ SprintPad stores all data locally using **IndexedDB** — no internet connection
 
 ## 🚀 Deployment
 
-SprintPad is a static PWA — three files, no build step.
+SprintPad is a static PWA — no build step required.
 
 ```
 index.html
 style.css
 app.js
+manifest.json
+sw.js
+icons/
+  icon-192.png
+  icon-512.png
 ```
 
 Deploy to **GitHub Pages**:
-1. Push the three files to your repo's `main` branch
+1. Push all files to your repo's `main` branch
 2. Go to Settings → Pages → Source: `main / root`
 3. Done — accessible at `https://yourusername.github.io/SprintPad/`
 
@@ -81,30 +97,54 @@ Deploy to **GitHub Pages**:
 | UI        | Vanilla HTML + CSS |
 | Logic     | Vanilla JavaScript (ES6+) |
 | Storage   | IndexedDB (via native browser API) |
+| PWA       | Service Worker + Web App Manifest |
 | Fonts     | Inter + Space Grotesk (Google Fonts) |
 | Hosting   | GitHub Pages |
+
+---
+
+## 📋 Changelog
+
+### v1.0.1
+- ✅ Fixed: Project Completed tab now auto-reflects when all tasks are done
+- ✅ Fixed: UTC timezone — dates now show correctly in local time
+- ✨ New: Swipe left to archive tasks
+- ✨ New: Swipe left on archived task to restore
+- ✨ New: Archived tab in Tasks screen
+- ✨ New: Notification bell with red dot for tasks due within 3 days or overdue
+- ✨ New: Red dot persists until panel opened, resets next day
+- 💅 Improved: Overall CSS spacing polish across all cards and screens
+- 💅 Improved: Overdue label on past due date tasks
+
+### v1.0.0
+- Initial release
+- Create flow: Tasks, Projects, Notes
+- Home screen with stats, today's tasks, recent projects and notes
+- Projects screen with All/Active/Completed/Archived filter
+- Tasks screen with All/To Do/In Progress/Done filter
+- Notes screen
+- Profile screen with display name edit
+- IndexedDB offline storage
+- PWA manifest + service worker
 
 ---
 
 ## 🗺️ Roadmap
 
 ### v1.1.0
-- [ ] Task detail view (edit, delete, notes expand)
+- [ ] Task detail view (edit, delete, full notes)
 - [ ] Project detail view with task list
-- [ ] Swipe to delete cards
+- [ ] Delete tasks and projects
 
 ### v1.2.0
 - [ ] Kanban board view (To Do / In Progress / Done columns)
-- [ ] PWA manifest + service worker (installable, offline icon)
-
-### v1.3.0
-- [ ] Timeline / calendar view
 - [ ] Due date reminders (Push Notifications API)
 
 ### v2.0.0 *(Cloud)*
 - [ ] Supabase backend (optional sign-in)
 - [ ] Multi-device sync
-- [ ] Notification bell (team activity feed)
+- [ ] Team collaboration
+- [ ] Activity feed via notification bell
 
 ---
 
@@ -112,9 +152,14 @@ Deploy to **GitHub Pages**:
 
 ```
 SprintPad/
-├── index.html   # App shell, screens, modals, bottom nav
-├── style.css    # Dark theme, component styles, animations
-└── app.js       # IndexedDB setup, create flow, render logic
+├── index.html      # App shell, screens, modals, bottom nav
+├── style.css       # Dark theme, component styles, animations
+├── app.js          # IndexedDB setup, create flow, render logic
+├── manifest.json   # PWA manifest
+├── sw.js           # Service worker for offline caching
+└── icons/
+    ├── icon-192.png
+    └── icon-512.png
 ```
 
 ---
@@ -141,5 +186,3 @@ Built by **Jaymar Reperuga** ([@jmprojectsme](https://github.com/jmprojectsme))
 Self-taught developer · Built entirely on a Xiaomi Redmi Note 14 📱
 
 ---
-
-*SprintPad is part of the Clio app suite.*
