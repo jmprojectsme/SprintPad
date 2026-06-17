@@ -1,5 +1,5 @@
 // ================================
-// SprintPad - app.js v1.0.0
+// SprintPad - app.js v1.0.1
 // IndexedDB · Offline-first PWA
 // ================================
 
@@ -34,7 +34,7 @@ function initDB() {
         ts.createIndex('created_at', 'created_at', { unique: false })
       }
 
-          // Notes
+      // Notes
       if (!db.objectStoreNames.contains('notes')) {
         const ns = db.createObjectStore('notes', { keyPath: 'id' })
         ns.createIndex('created_at', 'created_at', { unique: false })
@@ -191,8 +191,9 @@ window.openForm = async function(type) {
         document.getElementById('priority-hidden').value = btn.dataset.val
       })
     })
-      }
-    // Color dots
+  }
+
+  // Color dots
   if (type === 'project') {
     body.querySelectorAll('.color-dot').forEach(dot => {
   dot.addEventListener('click', (e) => {
@@ -206,9 +207,9 @@ window.openForm = async function(type) {
     document.getElementById('color-hidden').value = dot.dataset.color
   })
 })
-  }
+            }
 
-  // Auto-focus first input
+    // Auto-focus first input
   setTimeout(() => {
     const first = body.querySelector('input, textarea')
     if (first) first.focus()
@@ -302,7 +303,7 @@ function getFormHTML(type, projects = []) {
     </div>
     <button class="btn-primary full" onclick="submitNote()">Save Note</button>
   `
-  }
+}
 
 // ================================
 // SUBMIT HANDLERS
@@ -371,8 +372,64 @@ window.submitNote = async function() {
   showToast('Note saved 📝', 'success')
   await renderTab(currentTab)
   await updateStats()
+    }
+
+// ================================
+// ARCHIVE / RESTORE TASK
+// ================================
+
+window.archiveTask = async function(id) {
+  const tasks = await dbGetAll('tasks')
+  const task  = tasks.find(t => t.id === id)
+  if (!task) return
+  task.status = 'archived'
+  await dbPut('tasks', task)
+
+  // Re-check project status
+  if (task.project_id) {
+    const allTasks     = await dbGetAll('tasks')
+    const projectTasks = allTasks.filter(t => t.project_id === task.project_id && t.status !== 'archived')
+    const projects     = await dbGetAll('projects')
+    const project      = projects.find(p => p.id === task.project_id)
+    if (project) {
+      const allDone  = projectTasks.length > 0 && projectTasks.every(t => t.status === 'done')
+      project.status = allDone ? 'completed' : 'active'
+      await dbPut('projects', project)
+    }
+  }
+
+  showToast('Task archived 🗂️', '')
+  await renderTab(currentTab)
+  await updateStats()
 }
 
+window.restoreTask = async function(id) {
+  const tasks = await dbGetAll('tasks')
+  const task  = tasks.find(t => t.id === id)
+  if (!task) return
+  task.status = 'todo'
+  await dbPut('tasks', task)
+
+  // Re-check project status
+  if (task.project_id) {
+    const allTasks     = await dbGetAll('tasks')
+    const projectTasks = allTasks.filter(t => 
+      t.project_id === task.project_id && 
+      t.id !== task.id &&
+      t.status !== 'archived'
+    )
+    const projects = await dbGetAll('projects')
+    const project  = projects.find(p => p.id === task.project_id)
+    if (project) {
+      project.status = 'active'
+      await dbPut('projects', project)
+    }
+  }
+
+  showToast('Task restored ↩️', 'success')
+  await renderTab(currentTab)
+  await updateStats()
+}
 // ================================
 // TOGGLE TASK STATUS
 // ================================
@@ -385,6 +442,22 @@ window.toggleTask = async function(id) {
   const cycle = { todo: 'inprogress', inprogress: 'done', done: 'todo' }
   task.status  = cycle[task.status] || 'todo'
   await dbPut('tasks', task)
+
+  // Auto-update parent project status
+  if (task.project_id) {
+    const allTasks    = await dbGetAll('tasks')
+    const projectTasks = allTasks.filter(t => t.project_id === task.project_id && t.status !== 'archived')
+    if (projectTasks.length > 0) {
+      const allDone  = projectTasks.every(t => t.status === 'done')
+      const projects = await dbGetAll('projects')
+      const project  = projects.find(p => p.id === task.project_id)
+      if (project) {
+        project.status = allDone ? 'completed' : 'active'
+        await dbPut('projects', project)
+      }
+    }
+  }
+
   await renderTab(currentTab)
   await updateStats()
 }
@@ -439,9 +512,9 @@ document.querySelector('.greeting-sub').textContent = greeting
         <div class="empty-text">No projects yet</div>
         <button class="empty-action" onclick="openCreate('project')">Start a project</button>
       </div>`
-                 }
+  }
 
-    // Recent notes (last 3)
+  // Recent notes (last 3)
   const recentNotes  = [...notes].sort((a,b) => b.created_at.localeCompare(a.created_at)).slice(0, 3)
   const homeNoteList = document.getElementById('home-notes-list')
   if (recentNotes.length) {
@@ -454,7 +527,7 @@ document.querySelector('.greeting-sub').textContent = greeting
         <button class="empty-action" onclick="openCreate('note')">Write a note</button>
       </div>`
   }
-}
+  }
 
 // ================================
 // RENDER: PROJECTS
@@ -496,8 +569,8 @@ async function renderTasks() {
   const [tasks, projects] = await Promise.all([dbGetAll('tasks'), dbGetAll('projects')])
 
   const filtered = taskFilter === 'all'
-    ? tasks
-    : tasks.filter(t => t.status === taskFilter)
+  ? tasks.filter(t => t.status !== 'archived')
+  : tasks.filter(t => t.status === taskFilter)
 
   const sorted = [...filtered].sort((a,b) => b.created_at.localeCompare(a.created_at))
   const list   = document.getElementById('tasks-list')
@@ -569,20 +642,33 @@ function renderTaskCard(task, projects = []) {
     task.due_date ? formatDate(task.due_date) : null
   ].filter(Boolean).join(' · ')
 
-  return `
-    <div class="task-card" onclick="toggleTask('${task.id}')">
+  const isArchived = task.status === 'archived'
+const swipeLabel = isArchived ? '↩️ Restore' : '🗂️ Archive'
+const swipeClass = isArchived ? 'restore' : 'archive'
+
+return `
+  <div class="task-card-wrap" id="wrap-${task.id}">
+    <div class="task-swipe-action ${swipeClass}">
+      <span>${swipeLabel}</span>
+    </div>
+    <div class="task-card"
+      onclick="toggleTask('${task.id}')"
+      ontouchstart="swipeStart(event, '${task.id}', ${isArchived})"
+      ontouchmove="swipeMove(event, '${task.id}')"
+      ontouchend="swipeEnd(event, '${task.id}')", ${isArchived})">
       <div class="task-check ${isDone ? 'done' : ''}"></div>
       <div class="task-body">
         <div class="task-title ${isDone ? 'done' : ''}">${escHtml(task.title)}</div>
         ${meta ? `<div class="task-meta">${escHtml(meta)}</div>` : ''}
       </div>
       <span class="priority-badge ${task.priority}">${capitalize(task.priority)}</span>
-    </div>`
+    </div>
+  </div>`
 }
 
 function renderProjectCard(project, tasks = []) {
-  const projectTasks = tasks.filter(t => t.project_id === project.id)
-  const doneTasks    = projectTasks.filter(t => t.status === 'done').length
+  const projectTasks = tasks.filter(t => t.project_id === project.id && t.status !== 'archived')
+const doneTasks    = projectTasks.filter(t => t.status === 'done').length
   const progress     = projectTasks.length ? Math.round((doneTasks / projectTasks.length) * 100) : 0
 
   return `
@@ -612,7 +698,7 @@ function renderProjectCard(project, tasks = []) {
         </div>` : `<div class="project-meta-item">${progress}%</div>`}
       </div>
     </div>`
-      }
+  }
 
 function renderNoteCard(note) {
   return `
@@ -691,6 +777,163 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 // ================================
+// SWIPE TO ARCHIVE / RESTORE
+// ================================
+
+let swipeStartX = 0
+let swipeStartY = 0
+let swipeLocked = false
+let swipeTaskId = null
+let swipeIsArchived = false
+
+window.swipeStart = function(e, id, isArchived) {
+  swipeStartX = e.touches[0].clientX
+  swipeStartY = e.touches[0].clientY
+  swipeLocked = false
+  swipeTaskId = id
+  swipeIsArchived = (isArchived === true || isArchived === 'true')
+}
+
+window.swipeMove = function(e, id) {
+  const dx = e.touches[0].clientX - swipeStartX
+  const dy = Math.abs(e.touches[0].clientY - swipeStartY)
+  if (dy > 10 && !swipeLocked) return
+  if (dx < -10) {
+    swipeLocked = true
+    try { e.preventDefault() } catch(err) {}
+    const wrap = document.getElementById('wrap-' + id)
+    if (wrap) {
+      const card = wrap.querySelector('.task-card')
+      if (card) {
+        const move = Math.max(-90, dx)
+        card.style.transform = `translateX(${move}px)`
+      }
+    }
+  }
+}
+
+window.swipeEnd = function(e, id) {
+  const dx = e.changedTouches[0].clientX - swipeStartX
+  const wrap = document.getElementById('wrap-' + id)
+  if (!wrap) return
+  const card = wrap.querySelector('.task-card')
+
+  if (dx < -60) {
+    if (card) card.style.transform = 'translateX(-90px)'
+    wrap.classList.add('swiped')
+    wrap._swipeTimer = setTimeout(async () => {
+      const tasks = await dbGetAll('tasks')
+      const task  = tasks.find(t => t.id === id)
+      if (!task) return
+      if (task.status === 'archived') {
+        restoreTask(id)
+      } else {
+        archiveTask(id)
+      }
+    }, 1500)
+  } else {
+    if (card) card.style.transform = 'translateX(0)'
+    wrap.classList.remove('swiped')
+    clearTimeout(wrap._swipeTimer)
+  }
+}
+
+// ================================
+// NOTIFICATIONS
+// ================================
+
+function getUrgentTasks(tasks) {
+  const now  = new Date()
+  const nDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  return tasks.filter(t => {
+    if (!t.due_date || t.status === 'done' || t.status === 'archived') return false
+    const d    = new Date(t.due_date + 'T00:00:00')
+    const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const diff = Math.round((dDay - nDay) / 86400000)
+    return diff <= 3 // due within 3 days or overdue
+  })
+}
+
+async function updateNotifDot() {
+  const tasks    = await dbGetAll('tasks')
+  const urgent   = getUrgentTasks(tasks)
+  const dot      = document.getElementById('notif-dot')
+  if (!dot) return
+
+  const lastRead  = localStorage.getItem('sp_notif_read')
+  const readToday = lastRead === new Date().toDateString()
+
+  if (urgent.length > 0 && !readToday) {
+    dot.classList.remove('hidden')
+  } else {
+    dot.classList.add('hidden')
+  }
+}
+
+window.toggleNotifPanel = async function() {
+  const panel   = document.getElementById('notif-panel')
+  const overlay = document.getElementById('notif-overlay')
+  const isOpen  = !panel.classList.contains('hidden')
+
+  if (isOpen) {
+    closeNotifPanel()
+    return
+  }
+
+  // Build notification list
+  const tasks   = await dbGetAll('tasks')
+  const projects = await dbGetAll('projects')
+  const urgent  = getUrgentTasks(tasks)
+  const list    = document.getElementById('notif-list')
+
+  if (!urgent.length) {
+    list.innerHTML = `<div class="notif-empty">🎉 You're all caught up!</div>`
+  } else {
+    const now  = new Date()
+    const nDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    list.innerHTML = urgent.map(t => {
+      const d     = new Date(t.due_date + 'T00:00:00')
+      const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      const diff  = Math.round((dDay - nDay) / 86400000)
+      const project = projects.find(p => p.id === t.project_id)
+
+      const isOverdue = diff < 0
+      const label = isOverdue
+        ? `${Math.abs(diff)}d overdue`
+        : diff === 0 ? 'Due today'
+        : diff === 1 ? 'Due tomorrow'
+        : `Due in ${diff} days`
+
+      const iconClass = isOverdue ? 'overdue' : 'duesoon'
+      const icon      = isOverdue ? '🔴' : '🟡'
+
+      return `
+        <div class="notif-item">
+          <div class="notif-item-icon ${iconClass}">${icon}</div>
+          <div class="notif-item-body">
+            <div class="notif-item-title">${escHtml(t.title)}</div>
+            <div class="notif-item-sub">${project ? escHtml(project.name) + ' · ' : ''}${label}</div>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  panel.classList.remove('hidden')
+  overlay.classList.remove('hidden')
+
+  // Hide red dot after opening and save read state
+localStorage.setItem('sp_notif_read', new Date().toDateString())
+document.getElementById('notif-dot').classList.add('hidden')
+}
+
+window.closeNotifPanel = function() {
+  document.getElementById('notif-panel').classList.add('hidden')
+  document.getElementById('notif-overlay').classList.add('hidden')
+}
+
+// ================================
 // UTILS
 // ================================
 
@@ -704,13 +947,24 @@ function capitalize(str) {
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : ''))
-  const now = new Date()
-  const diff = Math.floor((d - now) / 86400000)
+  const d   = new Date(dateStr.length === 10 ? dateStr + 'T00:00:00' : dateStr)
+  const now  = new Date()
+  const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const nDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diff = Math.round((dDay - nDay) / 86400000)
   if (diff === 0)  return 'Today'
   if (diff === 1)  return 'Tomorrow'
   if (diff === -1) return 'Yesterday'
+  if (diff < -1)   return `${Math.abs(diff)}d overdue`
   return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
+}
+
+async function updateStats() {
+  const [tasks, projects] = await Promise.all([dbGetAll('tasks'), dbGetAll('projects')])
+  document.getElementById('stat-projects').textContent = projects.length
+  document.getElementById('stat-tasks').textContent    = tasks.length
+  document.getElementById('stat-done').textContent     = tasks.filter(t => t.status === 'done').length
+  await updateNotifDot()
 }
 
 // ================================
