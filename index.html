@@ -42,14 +42,25 @@
         <div class="topbar-title hidden" id="topbar-title">Projects</div>
       </div>
       <div id="topbar-right">
-        <button class="icon-btn" id="notif-btn" aria-label="Notifications">
+        <button class="icon-btn" id="notif-btn" aria-label="Notifications" onclick="toggleNotifPanel()">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
+          <span class="notif-dot hidden" id="notif-dot"></span>
         </button>
       </div>
     </header>
+
+    <!-- NOTIFICATION PANEL -->
+    <div id="notif-overlay" class="overlay hidden" onclick="closeNotifPanel()"></div>
+    <div id="notif-panel" class="notif-panel hidden">
+      <div class="notif-panel-header">
+        <div class="notif-panel-title">Notifications</div>
+        <button class="modal-back" onclick="closeNotifPanel()">✕</button>
+      </div>
+      <div id="notif-list" class="notif-list"></div>
+    </div>
 
     <!-- SCREENS -->
     <main id="screens">
@@ -154,6 +165,7 @@
           <button class="filter-tab" data-filter="todo">To Do</button>
           <button class="filter-tab" data-filter="inprogress">In Progress</button>
           <button class="filter-tab" data-filter="done">Done</button>
+          <button class="filter-tab" data-filter="archived">Archived</button>
         </div>
         <div class="scroll-area" style="padding-top:0">
           <div id="tasks-list">
@@ -226,7 +238,7 @@
             <div class="settings-row static">
               <span class="settings-row-icon">⚡</span>
               <span class="settings-row-text">SprintPad</span>
-              <span class="settings-row-value">v1.0.0</span>
+              <span class="settings-row-value">v1.0.1</span>
             </div>
           </div>
 
@@ -368,5 +380,5 @@
   }
 </script>
 </body>
-                </html>
-    
+  </html>
+  
